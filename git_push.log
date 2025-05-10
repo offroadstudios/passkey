@@ -19403,3 +19403,12 @@ Git LFS not installed; skipping LFS setup
  delete mode 100644 node_modules/zod/lib/types.js
  delete mode 100644 node_modules/zod/package.json
 Pushing to origin main…
+remote: error: Trace: ec3a85edbd7101b4fe01bf02e8f8c7deee246e13438837bbc1c056f6f12bc3fd        
+remote: error: See https://gh.io/lfs for more information.        
+remote: error: File node_modules/@next/swc-linux-x64-gnu/next-swc.linux-x64-gnu.node is 111.26 MB; this exceeds GitHub's file size limit of 100.00 MB        
+remote: error: File node_modules/@next/swc-linux-x64-musl/next-swc.linux-x64-musl.node is 130.16 MB; this exceeds GitHub's file size limit of 100.00 MB        
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To https://github.com/offroadstudios/passkey.git
+ ! [remote rejected] main -> main (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/offroadstudios/passkey.git'
+Push failed; see above for errors
