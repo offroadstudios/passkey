@@ -1,7 +1,12 @@
-
-// File: pages/index.tsx
+// pages/index.tsx
 import dynamic from 'next/dynamic';
-const HomeClient = dynamic(() => import('../Components/HomeClient'), { ssr: false });
-export default function IndexPage() {
+
+// HomeClient contains your entire passkey + smart-wallet flow,
+// and it imports `useWallet` from '@lazorkit/wallet'.
+const HomeClient = dynamic(() => import('../components/HomeClient'), {
+  ssr: false,
+});
+
+export default function HomePage() {
   return <HomeClient />;
 }

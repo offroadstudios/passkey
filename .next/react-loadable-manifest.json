@@ -571,10 +571,16 @@
     "id": "node_modules/viem/_esm/utils/signature/recoverPublicKey.js -> @noble/curves/secp256k1",
     "files": []
   },
-  "pages/index.tsx -> ../Components/HomeClient": {
-    "id": "pages/index.tsx -> ../Components/HomeClient",
+  "pages/_app.tsx -> ../components/ClientProviders": {
+    "id": "pages/_app.tsx -> ../components/ClientProviders",
     "files": [
-      "static/chunks/_pages-dir-browser_Components_HomeClient_tsx.js"
+      "static/chunks/_pages-dir-browser_components_ClientProviders_tsx.js"
+    ]
+  },
+  "pages/index.tsx -> ../components/HomeClient": {
+    "id": "pages/index.tsx -> ../components/HomeClient",
+    "files": [
+      "static/chunks/_pages-dir-browser_components_HomeClient_tsx.js"
     ]
   }
 }

@@ -7,18 +7,14 @@ import Head from 'next/head';
 import { useWallet as useSolanaWallet } from '@solana/wallet-adapter-react';
 import { useWallet as useLazorWallet }  from '@lazorkit/wallet';
 
-import { extractUncompressedP256 } from './Utils/webauthn';
+import { extractUncompressedP256 } from '../utils/webauthn';
 
 export default function HomeClient() {
-  // 1) Phantom adapter
-  const {
-    publicKey: payerPubkey,
-    connect: connectPhantom,
-    disconnect: disconnectPhantom,
-    connected: isPhantomConnected,
-  } = useSolanaWallet();
+  // Phantom wallet state (connected when WalletMultiButton has done its job)
+  const { publicKey: payerPubkey, connected: isPhantomConnected } =
+    useSolanaWallet();
 
-  // 2) Lazor.kit adapter
+  // Lazor.kit wallet hook
   const {
     isConnected: isPasskeyConnected,
     smartWalletAuthorityPubkey,
@@ -29,17 +25,11 @@ export default function HomeClient() {
     error: passkeyError,
   } = useLazorWallet({
     rpcUrl: 'https://api.devnet.solana.com',
-    // Phantom as the fee-payer/signer
     signer: {
       publicKey: payerPubkey!,
       signTransaction: async (tx) => {
-        // ensure Phantom is connected
-        if (!isPhantomConnected) {
-          await connectPhantom();
-        }
         tx.feePayer = payerPubkey!;
-        const signed = await connectPhantom().then(() => tx);
-        return signed;
+        return tx;
       },
     },
   });
@@ -47,7 +37,6 @@ export default function HomeClient() {
   const [processing, setProcessing] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
 
-  // load mock balance from Jupiter once passkey wallet connects
   useEffect(() => {
     if (isPasskeyConnected) {
       fetch('https://quote-api.jup.ag/v6/tokens')
@@ -57,17 +46,16 @@ export default function HomeClient() {
     }
   }, [isPasskeyConnected]);
 
-  const handleFullFlow = async () => {
+  const handleAuth = async () => {
     setProcessing(true);
     try {
-      // 1) Connect Phantom so we have a payer
+      // make sure Phantom is connected first
       if (!isPhantomConnected) {
-        await connectPhantom();
+        throw new Error('Please connect your Phantom wallet first.');
       }
 
-      // 2) If the smart wallet PDA doesn’t exist yet, register & create it
+      // 1) First‐time: register & create the PDA
       if (!smartWalletAuthorityPubkey) {
-        // a) WebAuthn registration
         const challenge = new Uint8Array(32);
         window.crypto.getRandomValues(challenge);
 
@@ -77,7 +65,7 @@ export default function HomeClient() {
           user: {
             id: new TextEncoder().encode(payerPubkey!.toBase58()),
             name: payerPubkey!.toBase58(),
-            displayName: 'User',
+            displayName: 'Demo User',
           },
           pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
           timeout: 60000,
@@ -100,10 +88,11 @@ export default function HomeClient() {
         });
       }
 
-      // 3) Finally authenticate or re-authenticate via passkey
+      // 2) Then authenticate/log in via your passkey
       await connectPasskey();
     } catch (err) {
-      console.error('Full flow error:', err);
+      console.error('Auth error:', err);
+      alert((err as Error).message);
     } finally {
       setProcessing(false);
     }
@@ -112,24 +101,13 @@ export default function HomeClient() {
   return (
     <>
       <Head>
-        <title>Passkey-Secured Smart Wallet</title>
+        <title>Passkey‐Secured Smart Wallet</title>
       </Head>
       <main style={{ textAlign: 'center', padding: 40 }}>
-        {!isPhantomConnected ? (
-          <button onClick={() => connectPhantom()} style={{ margin: '1rem', padding: '0.75rem 1.5rem' }}>
-            Connect Phantom
-          </button>
-        ) : (
-          <p>
-            Phantom: {payerPubkey?.toBase58()}{' '}
-            <button onClick={() => disconnectPhantom()}>Disconnect</button>
-          </p>
-        )}
-
         <button
-          onClick={handleFullFlow}
-          disabled={processing || passkeyLoading || !isPhantomConnected}
-          style={{ margin: '1rem', padding: '1rem 2rem', fontSize: '1rem' }}
+          onClick={handleAuth}
+          disabled={processing || passkeyLoading}
+          style={{ padding: '1rem 2rem', fontSize: '1rem' }}
         >
           {processing || passkeyLoading
             ? 'Working…'
@@ -141,13 +119,18 @@ export default function HomeClient() {
         {isPasskeyConnected && (
           <>
             <p>
+              <strong>Phantom:</strong> {payerPubkey?.toBase58()}
+            </p>
+            <p>
               <strong>Smart Wallet PDA:</strong>{' '}
               {smartWalletAuthorityPubkey?.toBase58()}
             </p>
             <p>
-              <strong>Mock token count:</strong> {balance ?? 'Loading…'}
+              <strong>Mock tokens:</strong> {balance ?? 'Loading…'}
             </p>
-            <button onClick={() => disconnectPasskey()}>Disconnect Passkey</button>
+            <button onClick={() => disconnectPasskey()}>
+              Disconnect Passkey
+            </button>
           </>
         )}
 
