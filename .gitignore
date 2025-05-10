@@ -3,3 +3,6 @@
 
 # Next.js build output
 /.next/
+
+# dependencies
+node_modules/
